@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>회전행렬과 포물선의 반사 성질</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: "Noto Sans KR", Arial, sans-serif;
+        background: #f4f7fb;
+        color: #172033;
+    }
+
+    header {
+        background: linear-gradient(135deg, #172554, #2563eb);
+        color: white;
+        padding: 32px 20px;
+        text-align: center;
+    }
+
+    header h1 {
+        margin: 0 0 10px;
+        font-size: 28px;
+    }
+
+    header p {
+        margin: 0;
+        opacity: 0.9;
+    }
+
+    .container {
+        max-width: 1250px;
+        margin: 25px auto;
+        padding: 0 18px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 20px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+
+    .card h2 {
+        margin-top: 0;
+        font-size: 19px;
+        color: #172554;
+    }
+
+    canvas {
+        width: 100%;
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #dbe3ef;
+        display: block;
+    }
+
+    .angle-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    button {
+        border: none;
+        padding: 10px 16px;
+        border-radius: 9px;
+        cursor: pointer;
+        background: #e5e7eb;
+        color: #111827;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    button:hover {
+        transform: translateY(-1px);
+    }
+
+    button.active {
+        background: #2563eb;
+        color: white;
+    }
+
+    .slider-box {
+        margin-top: 15px;
+    }
+
+    input[type="range"] {
+        width: 100%;
+    }
+
+    .value {
+        font-size: 20px;
+        font-weight: bold;
+        color: #2563eb;
+    }
+
+    .formula {
+        background: #f1f5f9;
+        padding: 12px;
+        border-radius: 9px;
+        margin: 8px 0;
+        font-family: "Times New Roman", serif;
+        font-size: 17px;
+        overflow-x: auto;
+    }
+
+    .result {
+        background: #eff6ff;
+        border-left: 5px solid #2563eb;
+        padding: 13px;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+
+    .success {
+        background: #ecfdf5;
+        border-left: 5px solid #10b981;
+        padding: 13px;
+        border-radius: 8px;
+        margin-top: 10px;
+        font-weight: bold;
+    }
+
+    .number {
+        font-family: "Courier New", monospace;
+        font-weight: bold;
+    }
+
+    .small {
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    th, td {
+        border-bottom: 1px solid #e2e8f0;
+        padding: 9px;
+        text-align: center;
+    }
+
+    th {
+        background: #f8fafc;
+    }
+
+    .footer {
+        text-align: center;
+        color: #64748b;
+        padding: 20px;
+        font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+        .grid {
+            grid-template-columns: 1fr;
+        }
+
+        header h1 {
+            font-size: 23px;
+        }
+    }
+</style>
+</head>
+
+
+<body>
+
+<header>
+    <h1>회전행렬을 이용한 포물선의 좌표변환과 반사 성질 분석</h1>
+    <p>파라볼라 안테나의 신호 집속 원리를 중심으로</p>
+</header>
+
+
+<div class="container">
+
+    <!-- 시각화 -->
+    <div class="card">
+        <h2>① 포물선 회전 및 반사 시뮬레이션</h2>
+
+        <div class="angle-buttons">
+            <button onclick="setAngle(0)" id="btn0">0°</button>
+            <button onclick="setAngle(30)" id="btn30">30°</button>
+            <button onclick="setAngle(45)" id="btn45">45°</button>
+            <button onclick="setAngle(60)" id="btn60">60°</button>
+            <button onclick="setAngle(90)" id="btn90">90°</button>
+        </div>
+
+        <div class="slider-box">
+            <label>
+                회전각:
+                <span class="value" id="angleText">45°</span>
+            </label>
+
+            <input
+                type="range"
+                id="angleSlider"
+                min="0"
+                max="90"
+                step="1"
+                value="45"
+                oninput="sliderAngle(this.value)"
+            >
+        </div>
+
+        <br>
+
+        <canvas id="canvas" width="800" height="600"></canvas>
+
+        <p class="small">
+            ● 검은 곡선: 회전된 포물선 /
+            ● 점: 회전된 초점 /
+            ● 위쪽 선: 입사 신호 /
+            ● 포물선에서 초점을 향하는 선: 반사 신호
+        </p>
+    </div>
+
+
+    <div class="grid">
+
+        <!-- 회전행렬 -->
+        <div class="card">
+            <h2>② 회전행렬</h2>
+
+            <div class="formula">
+                R(θ) =
+                [ cosθ  -sinθ ]<br>
+                [ sinθ   cosθ ]
+            </div>
+
+            <p>점 (x, y)를 회전시키면</p>
+
+            <div class="formula">
+                X = x cosθ − y sinθ<br>
+                Y = x sinθ + y cosθ
+            </div>
+
+            <p>
+                현재 회전각:
+                <strong id="angleInfo">45°</strong>
+            </p>
+        </div>
+
+
+        <!-- 초점 -->
+        <div class="card">
+            <h2>③ 회전된 초점</h2>
+
+            <p>원래 포물선:</p>
+
+            <div class="formula">
+                x² = 4y
+            </div>
+
+            <p>원래 초점:</p>
+
+            <div class="formula">
+                F = (0, 1)
+            </div>
+
+            <p>회전 후 초점:</p>
+
+            <div class="formula">
+                F' = (−sinθ, cosθ)
+            </div>
+
+            <div class="result">
+                현재 초점:
+                <br>
+                <span class="number" id="focusResult"></span>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- 회전된 방정식 -->
+    <div class="card">
+        <h2>④ 회전된 포물선의 방정식</h2>
+
+        <p>
+            원래 포물선의 방정식
+            <strong>x² = 4y</strong>
+            에 역회전 좌표변환을 적용한다.
+        </p>
+
+        <div class="formula">
+            (X cosθ + Y sinθ)²
+            =
+            4(−X sinθ + Y cosθ)
+        </div>
+
+        <p>정리하면</p>
+
+        <div class="formula">
+            X²cos²θ
+            + 2XYsinθcosθ
+            + Y²sin²θ
+            + 4Xsinθ
+            − 4Ycosθ
+            = 0
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>계수</th>
+                    <th>값</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr>
+                    <td>A (X²)</td>
+                    <td id="coefA"></td>
+                </tr>
+
+                <tr>
+                    <td>B (XY)</td>
+                    <td id="coefB"></td>
+                </tr>
+
+                <tr>
+                    <td>C (Y²)</td>
+                    <td id="coefC"></td>
+                </tr>
+
+                <tr>
+                    <td>D (X)</td>
+                    <td id="coefD"></td>
+                </tr>
+
+                <tr>
+                    <td>E (Y)</td>
+                    <td id="coefE"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="result">
+            현재 방정식:
+            <br>
+            <span class="number" id="equationResult"></span>
+        </div>
+    </div>
+
+
+    <!-- 반사 계산 -->
+    <div class="card">
+        <h2>⑤ 반사 성질 수치 검증</h2>
+
+        <p>
+            포물선 위의 점을
+        </p>
+
+        <div class="formula">
+            P = (2t, t²)
+        </div>
+
+        <p>
+            로 두고, 여기서는
+            <strong>t = 1</strong>
+            을 사용한다.
+        </p>
+
+        <div class="formula">
+            접선 방향 벡터 u = (1, t)
+        </div>
+
+        <div class="formula">
+            입사 방향 d = (0, −1)
+        </div>
+
+        <p>반사 벡터는</p>
+
+        <div class="formula">
+            d' =
+            2(d·u)/(u·u) u − d
+        </div>
+
+        <div class="result">
+            반사 방향 벡터:
+            <br>
+            <span class="number" id="reflectionVector"></span>
+        </div>
+
+        <div class="result">
+            점 P에서 초점으로 향하는 벡터:
+            <br>
+            <span class="number" id="focusVector"></span>
+        </div>
+
+        <div class="result">
+            두 벡터의 2차원 외적:
+            <br>
+            <span class="number" id="crossProduct"></span>
+        </div>
+
+        <div class="success" id="parallelResult"></div>
+
+    </div>
+
+
+    <!-- 각도별 비교 -->
+    <div class="card">
+        <h2>⑥ 회전각에 따른 초점 좌표 비교</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>회전각</th>
+                    <th>cosθ</th>
+                    <th>sinθ</th>
+                    <th>초점 X</th>
+                    <th>초점 Y</th>
+                </tr>
+            </thead>
+
+            <tbody id="angleTable">
+            </tbody>
+        </table>
+    </div>
+
+
+    <!-- 결론 -->
+    <div class="card">
+        <h2>⑦ 시뮬레이션 결론</h2>
+
+        <div class="result">
+            회전행렬을 적용하면 포물선의 위치와 방향이 변화하며,
+            초점 역시 동일한 회전행렬에 의해 함께 이동한다.
+        </div>
+
+        <div class="result">
+            또한 반사 벡터와 포물선의 초점을 향하는 벡터의
+            외적이 0에 가까운 값을 가지므로,
+            두 벡터가 평행함을 수치적으로 확인할 수 있다.
+        </div>
+
+        <div class="success">
+            따라서 포물선의
+            <strong>“축과 평행하게 입사한 신호가 반사 후 초점을 향한다”</strong>
+            는 성질은 포물선을 회전시킨 경우에도 유지된다.
+        </div>
+    </div>
+
+</div>
+
+
+<div class="footer">
+    수학 탐구 시뮬레이션 · 회전행렬 · 포물선 · 반사 성질
+</div>
+
+
+<script>
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let angle = 45;
+
+
+// ------------------------------------
+// 기본 설정
+// ------------------------------------
+
+const SCALE = 75;
+
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+
+
+// 수학 좌표 → Canvas 좌표
+function toCanvas(x, y) {
+    return {
+        x: centerX + x * SCALE,
+        y: centerY - y * SCALE
+    };
+}
+
+
+// 회전행렬
+function rotatePoint(x, y, theta) {
+
+    const c = Math.cos(theta);
+    const s = Math.sin(theta);
+
+    return {
+        x: x * c - y * s,
+        y: x * s + y * c
+    };
+}
+
+
+// 숫자 포맷
+function fmt(x) {
+
+    if (Math.abs(x) < 1e-10) {
+        return "0.0000";
+    }
+
+    return x.toFixed(4);
+}
+
+
+// ------------------------------------
+// 좌표축
+// ------------------------------------
+
+function drawGrid() {
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#e5e7eb";
+
+    for (let x = -5; x <= 5; x++) {
+
+        const p1 = toCanvas(x, -4);
+        const p2 = toCanvas(x, 4);
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+    }
+
+    for (let y = -4; y <= 4; y++) {
+
+        const p1 = toCanvas(-5, y);
+        const p2 = toCanvas(5, y);
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+    }
+
+    // X축
+    ctx.strokeStyle = "#334155";
+    ctx.lineWidth = 2;
+
+    let p1 = toCanvas(-5, 0);
+    let p2 = toCanvas(5, 0);
+
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+
+    // Y축
+    p1 = toCanvas(0, -4);
+    p2 = toCanvas(0, 4);
+
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+
+}
+
+
+// ------------------------------------
+// 회전된 포물선
+// ------------------------------------
+
+function drawParabola(theta) {
+
+    ctx.beginPath();
+
+    let first = true;
+
+    for (let x = -4; x <= 4; x += 0.02) {
+
+        const y = x * x / 4;
+
+        const p = rotatePoint(x, y, theta);
+
+        const c = toCanvas(p.x, p.y);
+
+        if (first) {
+
+            ctx.moveTo(c.x, c.y);
+            first = false;
+
+        } else {
+
+            ctx.lineTo(c.x, c.y);
+
+        }
+    }
+
+    ctx.strokeStyle = "#111827";
+    ctx.lineWidth = 4;
+
+    ctx.stroke();
+}
+
+
+// ------------------------------------
+// 초점
+// ------------------------------------
+
+function drawFocus(theta) {
+
+    const F = rotatePoint(0, 1, theta);
+
+    const p = toCanvas(F.x, F.y);
+
+    ctx.beginPath();
+
+    ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+
+    ctx.fillStyle = "#ef4444";
+    ctx.fill();
+
+    ctx.font = "bold 15px Arial";
+    ctx.fillStyle = "#b91c1c";
+
+    ctx.fillText(
+        "F' (" + fmt(F.x) + ", " + fmt(F.y) + ")",
+        p.x + 12,
+        p.y - 12
+    );
+}
+
+
+// ------------------------------------
+// 반사 실험
+// ------------------------------------
+
+function drawReflection(theta) {
+
+    const t = 1;
+
+    // 원래 포물선 위의 점
+    const originalP = {
+        x: 2 * t,
+        y: t * t
+    };
+
+    // 회전된 P
+    const P = rotatePoint(
+        originalP.x,
+        originalP.y,
+        theta
+    );
+
+    // 회전된 초점
+    const F = rotatePoint(0, 1, theta);
+
+
+    // 원래 입사 방향
+    const d = {
+        x: 0,
+        y: -1
+    };
+
+
+    // 원래 접선 방향
+    const u = {
+        x: 1,
+        y: t
+    };
+
+
+    // 반사 벡터
+    const dot = d.x * u.x + d.y * u.y;
+    const norm = u.x * u.x + u.y * u.y;
+
+    const reflectedOriginal = {
+        x: 2 * dot / norm * u.x - d.x,
+        y: 2 * dot / norm * u.y - d.y
+    };
+
+
+    // 회전된 반사 벡터
+    const reflected = rotatePoint(
+        reflectedOriginal.x,
+        reflectedOriginal.y,
+        theta
+    );
+
+
+    // 초점 방향 벡터
+    const focusDirection = {
+        x: F.x - P.x,
+        y: F.y - P.y
+    };
+
+
+    // P 표시
+    const Pc = toCanvas(P.x, P.y);
+
+    ctx.beginPath();
+
+    ctx.arc(Pc.x, Pc.y, 7, 0, Math.PI * 2);
+
+    ctx.fillStyle = "#2563eb";
+    ctx.fill();
+
+    ctx.font = "bold 15px Arial";
+    ctx.fillStyle = "#1d4ed8";
+
+    ctx.fillText(
+        "P",
+        Pc.x + 10,
+        Pc.y - 10
+    );
+
+
+    // -----------------------------
+    // 입사 신호
+    // -----------------------------
+
+    const incomingLength = 2.5;
+
+    const incomingStart = {
+        x: P.x - d.x * incomingLength,
+        y: P.y - d.y * incomingLength
+    };
+
+    const incomingEnd = {
+        x: P.x,
+        y: P.y
+    };
+
+    drawArrow(
+        incomingStart,
+        incomingEnd,
+        "#f59e0b"
+    );
+
+
+    // -----------------------------
+    // 반사 신호
+    // -----------------------------
+
+    const reflectedLength = 3;
+
+    const reflectedStart = {
+        x: P.x,
+        y: P.y
+    };
+
+    const reflectedEnd = {
+        x: P.x + reflected.x * reflectedLength,
+        y: P.y + reflected.y * reflectedLength
+    };
+
+    drawArrow(
+        reflectedStart,
+        reflectedEnd,
+        "#10b981"
+    );
+
+
+    // -----------------------------
+    // 초점 연결
+    // -----------------------------
+
+    const Fc = toCanvas(F.x, F.y);
+
+    ctx.setLineDash([6, 6]);
+
+    ctx.beginPath();
+
+    ctx.moveTo(Pc.x, Pc.y);
+    ctx.lineTo(Fc.x, Fc.y);
+
+    ctx.strokeStyle = "#8b5cf6";
+    ctx.lineWidth = 2;
+
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+
+    // -----------------------------
+    // 수치 계산
+    // -----------------------------
+
+    const cross =
+        reflected.x * focusDirection.y
+        -
+        reflected.y * focusDirection.x;
+
+
+    document.getElementById("reflectionVector").innerText =
+        "(" +
+        fmt(reflected.x) +
+        ", " +
+        fmt(reflected.y) +
+        ")";
+
+    document.getElementById("focusVector").innerText =
+        "(" +
+        fmt(focusDirection.x) +
+        ", " +
+        fmt(focusDirection.y) +
+        ")";
+
+    document.getElementById("crossProduct").innerText =
+        fmt(cross);
+
+
+    if (Math.abs(cross) < 0.0001) {
+
+        document.getElementById("parallelResult").innerHTML =
+            "✓ 외적이 0에 가까우므로 두 벡터는 평행하다.<br>" +
+            "→ 반사 신호가 회전된 초점을 향함을 확인할 수 있다.";
+
+    } else {
+
+        document.getElementById("parallelResult").innerHTML =
+            "△ 외적이 0이 아니다. 계산을 확인해야 한다.";
+
+    }
+}
+
+
+// ------------------------------------
+// 화살표
+// ------------------------------------
+
+function drawArrow(start, end, color) {
+
+    const s = toCanvas(start.x, start.y);
+    const e = toCanvas(end.x, end.y);
+
+    ctx.beginPath();
+
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(e.x, e.y);
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+
+    ctx.stroke();
+
+
+    // 화살촉
+    const angle = Math.atan2(
+        e.y - s.y,
+        e.x - s.x
+    );
+
+    const size = 12;
+
+    ctx.beginPath();
+
+    ctx.moveTo(e.x, e.y);
+
+    ctx.lineTo(
+        e.x - size * Math.cos(angle - Math.PI / 6),
+        e.y - size * Math.sin(angle - Math.PI / 6)
+    );
+
+    ctx.lineTo(
+        e.x - size * Math.cos(angle + Math.PI / 6),
+        e.y - size * Math.sin(angle + Math.PI / 6)
+    );
+
+    ctx.closePath();
+
+    ctx.fillStyle = color;
+
+    ctx.fill();
+}
+
+
+// ------------------------------------
+// 방정식
+// ------------------------------------
+
+function updateEquation(theta) {
+
+    const c = Math.cos(theta);
+    const s = Math.sin(theta);
+
+    const A = c * c;
+    const B = 2 * s * c;
+    const C = s * s;
+    const D = 4 * s;
+    const E = -4 * c;
+
+    document.getElementById("coefA").innerText = fmt(A);
+    document.getElementById("coefB").innerText = fmt(B);
+    document.getElementById("coefC").innerText = fmt(C);
+    document.getElementById("coefD").innerText = fmt(D);
+    document.getElementById("coefE").innerText = fmt(E);
+
+
+    let equation =
+        fmt(A) + "X² + "
+        + fmt(B) + "XY + "
+        + fmt(C) + "Y² + "
+        + fmt(D) + "X "
+        + (E >= 0 ? "+ " : "− ")
+        + fmt(Math.abs(E))
+        + "Y = 0";
+
+    document.getElementById("equationResult").innerText =
+        equation;
+}
+
+
+// ------------------------------------
+// 각도별 표
+// ------------------------------------
+
+function createAngleTable() {
+
+    const angles = [0, 30, 45, 60, 90];
+
+    const table =
+        document.getElementById("angleTable");
+
+    table.innerHTML = "";
+
+    angles.forEach(deg => {
+
+        const rad =
+            deg * Math.PI / 180;
+
+        const c = Math.cos(rad);
+        const s = Math.sin(rad);
+
+        const fx = -s;
+        const fy = c;
+
+        const row =
+            document.createElement("tr");
+
+        row.innerHTML =
+            "<td>" + deg + "°</td>" +
+            "<td>" + fmt(c) + "</td>" +
+            "<td>" + fmt(s) + "</td>" +
+            "<td>" + fmt(fx) + "</td>" +
+            "<td>" + fmt(fy) + "</td>";
+
+        table.appendChild(row);
+    });
+}
+
+
+// ------------------------------------
+// 전체 업데이트
+// ------------------------------------
+
+function update() {
+
+    const theta =
+        angle * Math.PI / 180;
+
+
+    document.getElementById("angleText").innerText =
+        angle + "°";
+
+    document.getElementById("angleInfo").innerText =
+        angle + "°";
+
+
+    // 초점
+    const F = rotatePoint(0, 1, theta);
+
+    document.getElementById("focusResult").innerText =
+        "(" +
+        fmt(F.x) +
+        ", " +
+        fmt(F.y) +
+        ")";
+
+
+    // 그래프
+    drawGrid();
+
+    drawParabola(theta);
+
+    drawFocus(theta);
+
+    drawReflection(theta);
+
+
+    // 방정식
+    updateEquation(theta);
+
+
+    // 버튼
+    document.querySelectorAll(".angle-buttons button")
+        .forEach(btn => {
+            btn.classList.remove("active");
+        });
+
+    const button =
+        document.getElementById("btn" + angle);
+
+    if (button) {
+        button.classList.add("active");
+    }
+}
+
+
+// ------------------------------------
+// 각도 버튼
+// ------------------------------------
+
+function setAngle(value) {
+
+    angle = value;
+
+    document.getElementById("angleSlider").value =
+        value;
+
+    update();
+}
+
+
+// 슬라이더
+function sliderAngle(value) {
+
+    angle = Number(value);
+
+    update();
+}
+
+
+// ------------------------------------
+// 시작
+// ------------------------------------
+
+createAngleTable();
+
+setAngle(45);
+
+</script>
+
+</body>
+</html>
